@@ -16,9 +16,11 @@ namespace SermoDigital\ACF_Util;
  *
  * into
  *
- *     $inst = Rows.instance($field, $post_id);
+ *     use SermoDigital\ACF_Util\Rows as Rows;
+ *
+ *     $inst = Rows::instance($field, $post_id);
  *     foreach ($inst as $i => $elem) {
- *        ... = Rows.get_sub_field( ... ); // or $elem[ ... ]
+ *        ... = $inst->get_sub_field( ... ); // or $elem[ ... ]
  *     }
  *
  */
@@ -36,7 +38,7 @@ class Rows implements \Iterator {
     /**
      * @var int
      */
-    private $i = -1;
+    private $i = 0;
 
     /**
      * @var bool
@@ -61,12 +63,17 @@ class Rows implements \Iterator {
         if ($inst === null) {
             $inst = new static($field_name, $post_id, $format);
         } else {
-            $inst.rewind();
+            $inst->init($field_name, $post_id, $format);
+            $inst->rewind();
         }
         return $inst;
     }
 
     private function __construct(string $field_name, ?string $post_id, $format = true) {
+        $this->init($field_name, $post_id, $format);
+    }
+
+    private function init(string $field_name, ?string $post_id, $format = true) {
         $this->field_name = $field_name;
         $this->post_id    = $post_id;
         $this->format     = $format;
@@ -112,13 +119,8 @@ class Rows implements \Iterator {
      * Rewind the Iterator
      */
     public function rewind()  {
-        if ($this->i >= 0) {
-            reset_rows();
-            $this->i = -1;
-        } else {
-            // TODO: throw an Exception if this is false?
-            have_rows($this->field_name, $this->post_id);
-        }
+        reset_rows(true);
+        have_rows($this->field_name, $this->post_id);
     }
 
     /**
